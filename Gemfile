@@ -38,6 +38,6 @@ end
 # installed on Travis CI
 #
 group :test do
-  gem 'rspec', '~> 2.14'
+  gem 'rspec', '~> 2.99.0.beta1'
   gem 'coveralls', :require => false
 end
