@@ -52,6 +52,7 @@ describe Guard::UI do
     end
 
     it 'logs the message to with the info severity' do
+      pending 'See: https://github.com/rspec/rspec-mocks/issues/613'
       Guard::UI.logger.should_receive(:info).with('Info message', 'Guard::UiSpec')
       Guard::UI.info 'Info message'
     end
@@ -92,6 +93,7 @@ describe Guard::UI do
     end
 
     it 'logs the message to with the warn severity' do
+      pending 'See: https://github.com/rspec/rspec-mocks/issues/613'
       Guard::UI.logger.should_receive(:warn).with("\e[0;33mWarn message\e[0m", 'Guard::UiSpec')
       Guard::UI.warning 'Warn message'
     end
@@ -132,6 +134,7 @@ describe Guard::UI do
     end
 
     it 'logs the message to with the error severity' do
+      pending 'See: https://github.com/rspec/rspec-mocks/issues/613'
       Guard::UI.logger.should_receive(:error).with("\e[0;31mError message\e[0m", 'Guard::UiSpec')
       Guard::UI.error 'Error message'
     end
@@ -172,6 +175,7 @@ describe Guard::UI do
     end
 
     it 'logs the message to with the warn severity' do
+      pending 'See: https://github.com/rspec/rspec-mocks/issues/613'
       Guard::UI.logger.should_receive(:warn).with("\e[0;33mDeprecation message\e[0m", 'Guard::UiSpec')
       Guard::UI.deprecation 'Deprecation message'
     end
@@ -212,6 +216,7 @@ describe Guard::UI do
     end
 
     it 'logs the message to with the debug severity' do
+      pending 'See: https://github.com/rspec/rspec-mocks/issues/613'
       Guard::UI.logger.should_receive(:debug).with("\e[0;33mDebug message\e[0m", 'Guard::UiSpec')
       Guard::UI.debug 'Debug message'
     end
