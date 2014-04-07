@@ -33,7 +33,7 @@ describe Guard::Notifier::NotifySend do
   describe '.notify' do
     context 'without additional options' do
       it 'shows the notification with the default options' do
-        subject.should_receive(:system).with do |command, *arguments|
+        subject.should_receive(:system) do |command, *arguments|
           command.should eql 'notify-send'
           arguments.should include '-i', '/tmp/welcome.png'
           arguments.should include '-u', 'low'
@@ -46,7 +46,7 @@ describe Guard::Notifier::NotifySend do
 
     context 'with additional options' do
       it 'can override the default options' do
-        subject.should_receive(:system).with do |command, *arguments|
+        subject.should_receive(:system) do |command, *arguments|
           command.should eql 'notify-send'
           arguments.should include '-i', '/tmp/wait.png'
           arguments.should include '-u', 'critical'
