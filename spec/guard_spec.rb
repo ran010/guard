@@ -2,8 +2,8 @@ require 'spec_helper'
 
 describe Guard do
   before do
-    ::Guard::Interactor.stub(:fabricate)
-    Dir.stub(:chdir)
+    allow(::Guard::Interactor).to receive(:fabricate)
+    allow(Dir).to receive(:chdir)
   end
 
   describe ".setup" do
@@ -11,65 +11,65 @@ describe Guard do
     subject { ::Guard.setup(options) }
 
     it "returns itself for chaining" do
-      subject.should be ::Guard
+      expect(subject).to be ::Guard
     end
 
     it "initializes the plugins" do
-      subject.guards.should eq []
+      expect(subject.guards).to eq []
     end
 
     it "initializes the groups" do
-      subject.groups[0].name.should eq :default
-      subject.groups[0].options.should == { }
+      expect(subject.groups[0].name).to eq :default
+      expect(subject.groups[0].options).to eq({ })
     end
 
     it "initializes the options" do
-      subject.options.should include(:my_opts)
+      expect(subject.options).to include(:my_opts)
     end
 
     it "initializes the listener" do
-      subject.listener.should be_kind_of(Listen::Listener)
+      expect(subject.listener).to be_kind_of(Listen::Listener)
     end
 
     it "respect the watchdir option" do
       ::Guard.setup(:watchdir => '/usr')
 
-      ::Guard.listener.directories.should eq ['/usr']
+      expect(::Guard.listener.directories).to eq ['/usr']
     end
 
     it "changes the current work dir to the watchdir" do
-      Dir.should_receive(:chdir).with('/tmp')
+      expect(Dir).to receive(:chdir).with('/tmp')
       ::Guard.setup(:watchdir => '/tmp')
     end
 
     it "call setup_signal_traps" do
-      ::Guard.should_receive(:setup_signal_traps)
+      expect(::Guard).to receive(:setup_signal_traps)
       subject
     end
 
     it "evaluates the DSL" do
-      ::Guard::Dsl.should_receive(:evaluate_guardfile).with(options)
+      expect(::Guard::Dsl).to receive(:evaluate_guardfile).with(options)
       subject
     end
 
     it "displays an error message when no guard are defined in Guardfile" do
-      ::Guard::UI.should_receive(:error).with('No guards found in Guardfile, please add at least one.')
+      expect(::Guard::UI).to receive(:error).with('No guards found in Guardfile, please add at least one.')
       subject
     end
 
     it "call setup_notifier" do
-      ::Guard.should_receive(:setup_notifier)
+      expect(::Guard).to receive(:setup_notifier)
       subject
     end
 
     it "call setup_interactor" do
-      ::Guard.should_receive(:setup_interactor)
+      expect(::Guard).to receive(:setup_interactor)
       subject
     end
 
     context 'without the group or plugin option' do
       it "initializes the empty scope" do
-        subject.scope.should == { :groups => [], :plugins => [] }
+        expect(subject.scope).to eq({ :groups => [], :plugins => [] })
       end
     end
 
@@ -80,10 +80,10 @@ describe Guard do
       } }
 
       it "initializes the group scope" do
-        subject.scope[:plugins].should be_empty
-        subject.scope[:groups].count.should be 2
-        subject.scope[:groups][0].name.should eql :backend
-        subject.scope[:groups][1].name.should eql :frontend
+        expect(subject.scope[:plugins]).to be_empty
+        expect(subject.scope[:groups].count).to be 2
+        expect(subject.scope[:groups][0].name).to eql :backend
+        expect(subject.scope[:groups][1].name).to eql :frontend
       end
     end
 
@@ -100,21 +100,21 @@ describe Guard do
       end
 
       it "initializes the plugin scope" do
-        subject.scope[:groups].should be_empty
-        subject.scope[:plugins].count.should be 2
-        subject.scope[:plugins][0].class.should eql ::Guard::Cucumber
-        subject.scope[:plugins][1].class.should eql ::Guard::Jasmine
+        expect(subject.scope[:groups]).to be_empty
+        expect(subject.scope[:plugins].count).to be 2
+        expect(subject.scope[:plugins][0].class).to eql ::Guard::Cucumber
+        expect(subject.scope[:plugins][1].class).to eql ::Guard::Jasmine
       end
     end
 
     context 'when deprecations should be shown' do
       let(:options) { { :show_deprecations => true, :guardfile => File.join(@fixture_path, "Guardfile") } }
       subject { ::Guard.setup(options) }
-      let(:runner) { mock('runner') }
+      let(:runner) { double('runner') }
 
       it 'calls the runner show deprecations' do
-        ::Guard::Runner.should_receive(:new).and_return runner
-        runner.should_receive(:deprecation_warning)
+        expect(::Guard::Runner).to receive(:new).and_return runner
+        expect(runner).to receive(:deprecation_warning)
         subject
       end
     end
@@ -124,37 +124,37 @@ describe Guard do
       subject { ::Guard.setup(options) }
 
       it "logs command execution if the debug option is true" do
-        ::Guard.should_receive(:debug_command_execution)
+        expect(::Guard).to receive(:debug_command_execution)
         subject
       end
 
       it "sets the log level to :debug if the debug option is true" do
         subject
-        ::Guard::UI.options[:level].should eql :debug
+        expect(::Guard::UI.options[:level]).to eql :debug
       end
     end
   end
 
   describe ".setup_signal_traps", :speed => 'slow' do
-    before { ::Guard::Dsl.stub(:evaluate_guardfile) }
+    before { allow(::Guard::Dsl).to receive(:evaluate_guardfile) }
 
     unless windows? || defined?(JRUBY_VERSION)
       context 'when receiving SIGUSR1' do
         context 'when Guard is running' do
-          before { ::Guard.listener.should_receive(:paused?).and_return false }
+          before { expect(::Guard.listener).to receive(:paused?).and_return false }
 
           it 'pauses Guard' do
-            ::Guard.should_receive(:pause)
+            expect(::Guard).to receive(:pause)
             Process.kill :USR1, Process.pid
             sleep 1
           end
         end
 
         context 'when Guard is already paused' do
-          before { ::Guard.listener.should_receive(:paused?).and_return true }
+          before { expect(::Guard.listener).to receive(:paused?).and_return true }
 
           it 'does not pauses Guard' do
-            ::Guard.should_not_receive(:pause)
+            expect(::Guard).not_to receive(:pause)
             Process.kill :USR1, Process.pid
             sleep 1
           end
@@ -163,20 +163,20 @@ describe Guard do
 
       context 'when receiving SIGUSR2' do
         context 'when Guard is paused' do
-          before { ::Guard.listener.should_receive(:paused?).and_return true }
+          before { expect(::Guard.listener).to receive(:paused?).and_return true }
 
           it 'un-pause Guard' do
-            ::Guard.should_receive(:pause)
+            expect(::Guard).to receive(:pause)
             Process.kill :USR2, Process.pid
             sleep 1
           end
         end
 
         context 'when Guard is already running' do
-          before { ::Guard.listener.should_receive(:paused?).and_return false }
+          before { expect(::Guard.listener).to receive(:paused?).and_return false }
 
           it 'does not un-pause Guard' do
-            ::Guard.should_not_receive(:pause)
+            expect(::Guard).not_to receive(:pause)
             Process.kill :USR2, Process.pid
             sleep 1
           end
@@ -185,21 +185,21 @@ describe Guard do
 
       context 'when receiving SIGINT' do
         context 'without an interactor' do
-          before { ::Guard.should_receive(:interactor).and_return nil }
+          before { expect(::Guard).to receive(:interactor).and_return nil }
 
           it 'stops Guard' do
-            ::Guard.should_receive(:stop)
+            expect(::Guard).to receive(:stop)
             Process.kill :INT, Process.pid
             sleep 1
           end
         end
 
         context 'with an interactor' do
-          let(:interactor) { mock('interactor', :thread => mock('thread')) }
-          before { ::Guard.should_receive(:interactor).twice.and_return interactor }
+          let(:interactor) { double('interactor', :thread => double('thread')) }
+          before { expect(::Guard).to receive(:interactor).twice.and_return interactor }
 
           it 'delegates to the Pry thread' do
-            interactor.thread.should_receive(:raise).with Interrupt
+            expect(interactor.thread).to receive(:raise).with Interrupt
             Process.kill :INT, Process.pid
             sleep 1
           end
@@ -212,7 +212,7 @@ describe Guard do
         before { ENV["GUARD_NOTIFY"] = nil }
 
         it "turns on the notifier on" do
-          ::Guard::Notifier.should_receive(:turn_on)
+          expect(::Guard::Notifier).to receive(:turn_on)
           ::Guard.setup(:notify => true)
         end
       end
@@ -221,7 +221,7 @@ describe Guard do
         before { ENV["GUARD_NOTIFY"] = 'true' }
 
         it "turns on the notifier on" do
-          ::Guard::Notifier.should_receive(:turn_on)
+          expect(::Guard::Notifier).to receive(:turn_on)
           ::Guard.setup(:notify => true)
         end
       end
@@ -230,7 +230,7 @@ describe Guard do
         before { ENV["GUARD_NOTIFY"] = 'false' }
 
         it "turns on the notifier off" do
-          ::Guard::Notifier.should_receive(:turn_off)
+          expect(::Guard::Notifier).to receive(:turn_off)
           ::Guard.setup(:notify => true)
         end
       end
@@ -241,7 +241,7 @@ describe Guard do
         before { ENV["GUARD_NOTIFY"] = nil }
 
         it "turns on the notifier off" do
-          ::Guard::Notifier.should_receive(:turn_off)
+          expect(::Guard::Notifier).to receive(:turn_off)
           ::Guard.setup(:notify => false)
         end
       end
@@ -250,7 +250,7 @@ describe Guard do
         before { ENV["GUARD_NOTIFY"] = 'true' }
 
         it "turns on the notifier on" do
-          ::Guard::Notifier.should_receive(:turn_off)
+          expect(::Guard::Notifier).to receive(:turn_off)
           ::Guard.setup(:notify => false)
         end
       end
@@ -259,7 +259,7 @@ describe Guard do
         before { ENV["GUARD_NOTIFY"] = 'false' }
 
         it "turns on the notifier off" do
-          ::Guard::Notifier.should_receive(:turn_off)
+          expect(::Guard::Notifier).to receive(:turn_off)
           ::Guard.setup(:notify => false)
         end
       end
@@ -267,22 +267,22 @@ describe Guard do
   end
 
   describe ".setup_listener" do
-    let(:listener) { stub.as_null_object }
+    let(:listener) { double.as_null_object }
 
     context "with latency option" do
-      before { ::Guard.stub(:options).and_return("latency" => 1.5) }
+      before { allow(::Guard).to receive(:options).and_return("latency" => 1.5) }
 
       it "pass option to listener" do
-        Listen.should_receive(:to).with(anything, { :relative_paths => true, :latency => 1.5 }) { listener }
+        expect(Listen).to receive(:to).with(anything, { :relative_paths => true, :latency => 1.5 }) { listener }
         ::Guard.setup_listener
       end
     end
 
     context "with force_polling option" do
-      before { ::Guard.stub(:options).and_return("force_polling" => true) }
+      before { allow(::Guard).to receive(:options).and_return("force_polling" => true) }
 
       it "pass option to listener" do
-        Listen.should_receive(:to).with(anything, { :relative_paths => true, :force_polling => true }) { listener }
+        expect(Listen).to receive(:to).with(anything, { :relative_paths => true, :force_polling => true }) { listener }
         ::Guard.setup_listener
       end
     end
@@ -290,7 +290,7 @@ describe Guard do
 
   describe ".setup_notifier" do
     context "with the notify option enabled" do
-      before { ::Guard.stub(:options).and_return(:notify => true) }
+      before { allow(::Guard).to receive(:options).and_return(:notify => true) }
 
       context 'without the environment variable GUARD_NOTIFY set' do
         before { ENV["GUARD_NOTIFY"] = nil }
@@ -313,7 +313,7 @@ describe Guard do
 
     context "with the notify option disabled" do
       before do
-        ::Guard.stub(:options).and_return(:notify => false)
+        allow(::Guard).to receive(:options).and_return(:notify => false)
       end
 
       context 'without the environment variable GUARD_NOTIFY set' do
@@ -383,54 +383,54 @@ describe Guard do
   end
 
   describe '#reload' do
-    let(:runner) { stub(:run => true) }
+    let(:runner) { double(:run => true) }
     subject { ::Guard.setup }
 
     before do
-      ::Guard.stub(:runner) { runner }
-      ::Guard::Dsl.stub(:reevaluate_guardfile)
-      ::Guard.stub(:within_preserved_state).and_yield
-      ::Guard::UI.stub(:info)
-      ::Guard::UI.stub(:clear)
+      allow(::Guard).to receive(:runner) { runner }
+      allow(::Guard::Dsl).to receive(:reevaluate_guardfile)
+      allow(::Guard).to receive(:within_preserved_state).and_yield
+      allow(::Guard::UI).to receive(:info)
+      allow(::Guard::UI).to receive(:clear)
     end
 
     it "clear UI" do
-      ::Guard::UI.should_receive(:clear)
+      expect(::Guard::UI).to receive(:clear)
       subject.reload
     end
 
     context 'with a old scope format' do
       it 'does not re-evaluate the Guardfile' do
-        ::Guard::Dsl.should_not_receive(:reevaluate_guardfile)
+        expect(::Guard::Dsl).not_to receive(:reevaluate_guardfile)
         subject.reload({ :group => :frontend })
       end
 
       it 'reloads Guard' do
-        runner.should_receive(:run).with(:reload, { :groups => [:frontend] })
+        expect(runner).to receive(:run).with(:reload, { :groups => [:frontend] })
         subject.reload({ :group => :frontend })
       end
     end
 
     context 'with a new scope format' do
       it 'does not re-evaluate the Guardfile' do
-        ::Guard::Dsl.should_not_receive(:reevaluate_guardfile)
+        expect(::Guard::Dsl).not_to receive(:reevaluate_guardfile)
         subject.reload({ :groups => [:frontend] })
       end
 
       it 'reloads Guard' do
-        runner.should_receive(:run).with(:reload, { :groups => [:frontend] })
+        expect(runner).to receive(:run).with(:reload, { :groups => [:frontend] })
         subject.reload({ :groups => [:frontend] })
       end
     end
 
     context 'with an empty scope' do
       it 'does re-evaluate the Guardfile' do
-        ::Guard::Dsl.should_receive(:reevaluate_guardfile)
+        expect(::Guard::Dsl).to receive(:reevaluate_guardfile)
         subject.reload
       end
 
       it 'does not reload Guard' do
-        runner.should_not_receive(:run).with(:reload, { })
+        expect(runner).not_to receive(:run).with(:reload, { })
         subject.reload
       end
     end
@@ -465,58 +465,58 @@ describe Guard do
     end
 
     it "return @guards without any argument" do
-      subject.guards.should == subject.instance_variable_get("@guards")
+      expect(subject.guards).to eq(subject.instance_variable_get("@guards"))
     end
 
     context "find a guard by as string/symbol" do
       it "find a guard by a string" do
-        subject.guards('foo-bar').should == @guard_foo_bar_backend
+        expect(subject.guards('foo-bar')).to eq(@guard_foo_bar_backend)
       end
 
       it "find a guard by a symbol" do
-        subject.guards(:'foo-bar').should == @guard_foo_bar_backend
+        expect(subject.guards(:'foo-bar')).to eq(@guard_foo_bar_backend)
       end
 
       it "returns nil if guard is not found" do
-        subject.guards('foo-foo').should be_nil
+        expect(subject.guards('foo-foo')).to be_nil
       end
     end
 
     context "find guards matching a regexp" do
       it "with matches" do
-        subject.guards(/^foobar/).should == [@guard_foo_bar_backend, @guard_foo_bar_frontend]
+        expect(subject.guards(/^foobar/)).to eq([@guard_foo_bar_backend, @guard_foo_bar_frontend])
       end
 
       it "without matches" do
-        subject.guards(/foo$/).should == []
+        expect(subject.guards(/foo$/)).to eq([])
       end
     end
 
     context "find guards by their group" do
       it "group name is a string" do
-        subject.guards(:group => 'backend').should == [@guard_foo_bar_backend, @guard_foo_baz_backend]
+        expect(subject.guards(:group => 'backend')).to eq([@guard_foo_bar_backend, @guard_foo_baz_backend])
       end
 
       it "group name is a symbol" do
-        subject.guards(:group => :frontend).should == [@guard_foo_bar_frontend, @guard_foo_baz_frontend]
+        expect(subject.guards(:group => :frontend)).to eq([@guard_foo_bar_frontend, @guard_foo_baz_frontend])
       end
 
       it "returns [] if guard is not found" do
-        subject.guards(:group => :unknown).should == []
+        expect(subject.guards(:group => :unknown)).to eq([])
       end
     end
 
     context "find guards by their group & name" do
       it "group name is a string" do
-        subject.guards(:group => 'backend', :name => 'foo-bar').should == [@guard_foo_bar_backend]
+        expect(subject.guards(:group => 'backend', :name => 'foo-bar')).to eq([@guard_foo_bar_backend])
       end
 
       it "group name is a symbol" do
-        subject.guards(:group => :frontend, :name => :'foo-baz').should == [@guard_foo_baz_frontend]
+        expect(subject.guards(:group => :frontend, :name => :'foo-baz')).to eq([@guard_foo_baz_frontend])
       end
 
       it "returns [] if guard is not found" do
-        subject.guards(:group => :unknown, :name => :'foo-baz').should == []
+        expect(subject.guards(:group => :unknown, :name => :'foo-baz')).to eq([])
       end
     end
   end
@@ -531,31 +531,31 @@ describe Guard do
 
     context 'without any argument' do
       it "return all groups" do
-        subject.groups.should == subject.instance_variable_get("@groups")
+        expect(subject.groups).to eq(subject.instance_variable_get("@groups"))
       end
     end
 
     context "find a group by as string/symbol" do
       it "find a group by a string" do
-        subject.groups('backend').should == @group_backend
+        expect(subject.groups('backend')).to eq(@group_backend)
       end
 
       it "find a group by a symbol" do
-        subject.groups(:backend).should == @group_backend
+        expect(subject.groups(:backend)).to eq(@group_backend)
       end
 
       it "returns nil if group is not found" do
-        subject.groups(:foo).should be_nil
+        expect(subject.groups(:foo)).to be_nil
       end
     end
 
     context "find groups matching a regexp" do
       it "with matches" do
-        subject.groups(/^back/).should == [@group_backend, @group_backflip]
+        expect(subject.groups(/^back/)).to eq([@group_backend, @group_backflip])
       end
 
       it "without matches" do
-        subject.groups(/back$/).should == []
+        expect(subject.groups(/back$/)).to eq([])
       end
     end
   end
@@ -571,9 +571,9 @@ describe Guard do
     it "initializes a default group" do
       subject.setup_groups
 
-      subject.groups.should have(1).item
-      subject.groups[0].name.should eq :default
-      subject.groups[0].options.should == { }
+      expect(subject.groups.size).to eq(1)
+      expect(subject.groups[0].name).to eq :default
+      expect(subject.groups[0].options).to eq({ })
     end
   end
 
@@ -593,43 +593,43 @@ describe Guard do
     end
 
     it "return @guards without any argument" do
-      subject.guards.should have(1).item
+      expect(subject.guards.size).to eq(1)
 
       subject.setup_guards
 
-      subject.guards.should be_empty
+      expect(subject.guards).to be_empty
     end
   end
 
   describe ".start" do
     before do
-      ::Guard.stub(:setup)
-      ::Guard.stub(:listener => mock('listener', :start => true))
-      ::Guard.stub(:runner => mock('runner', :run => true))
-      ::Guard.stub(:within_preserved_state).and_yield
+      allow(::Guard).to receive(:setup)
+      allow(::Guard).to receive(:listener).and_return(double('listener', :start => true))
+      allow(::Guard).to receive(:runner).and_return(double('runner', :run => true))
+      allow(::Guard).to receive(:within_preserved_state).and_yield
     end
 
     it "setup Guard" do
-      ::Guard.should_receive(:setup).with(:foo => 'bar')
+      expect(::Guard).to receive(:setup).with(:foo => 'bar')
 
       ::Guard.start(:foo => 'bar')
     end
 
     it "displays an info message" do
       ::Guard.instance_variable_set('@watchdir', '/foo/bar')
-      ::Guard::UI.should_receive(:info).with("Guard is now watching at '/foo/bar'")
+      expect(::Guard::UI).to receive(:info).with("Guard is now watching at '/foo/bar'")
 
       ::Guard.start
     end
 
     it "tell the runner to run the :start task" do
-      ::Guard.runner.should_receive(:run).with(:start)
+      expect(::Guard.runner).to receive(:run).with(:start)
 
       ::Guard.start
     end
 
     it "start the listener" do
-      ::Guard.listener.should_receive(:start)
+      expect(::Guard.listener).to receive(:start)
 
       ::Guard.start
     end
@@ -637,26 +637,26 @@ describe Guard do
 
   describe ".stop" do
     before do
-      ::Guard.stub(:setup)
-      ::Guard.stub(:listener => mock('listener', :stop => true))
-      ::Guard.stub(:runner => mock('runner', :run => true))
-      ::Guard.stub(:within_preserved_state).and_yield
+      allow(::Guard).to receive(:setup)
+      allow(::Guard).to receive(:listener).and_return(double('listener', :stop => true))
+      allow(::Guard).to receive(:runner).and_return(double('runner', :run => true))
+      allow(::Guard).to receive(:within_preserved_state).and_yield
     end
 
     it "turns the notifier off" do
-      ::Guard::Notifier.should_receive(:turn_off)
+      expect(::Guard::Notifier).to receive(:turn_off)
 
       ::Guard.stop
     end
 
     it "tell the runner to run the :stop task" do
-      ::Guard.runner.should_receive(:run).with(:stop)
+      expect(::Guard.runner).to receive(:run).with(:stop)
 
       ::Guard.stop
     end
 
     it "stops the listener" do
-      ::Guard.listener.should_receive(:stop)
+      expect(::Guard.listener).to receive(:stop)
 
       ::Guard.stop
     end
@@ -664,7 +664,7 @@ describe Guard do
     it "sets the running state to false" do
       ::Guard.running = true
       ::Guard.stop
-      ::Guard.running.should be_false
+      expect(::Guard.running).to be_falsey
     end
   end
 
@@ -673,7 +673,7 @@ describe Guard do
       @guard_rspec_class = double('Guard::RSpec')
       @guard_rspec       = double('Guard::RSpec', :is_a? => true)
 
-      ::Guard.stub!(:get_guard_class) { @guard_rspec_class }
+      allow(::Guard).to receive(:get_guard_class) { @guard_rspec_class }
 
       ::Guard.setup_guards
       ::Guard.setup_groups
@@ -681,28 +681,28 @@ describe Guard do
     end
 
     it "accepts guard name as string" do
-      @guard_rspec_class.should_receive(:new).and_return(@guard_rspec)
+      expect(@guard_rspec_class).to receive(:new).and_return(@guard_rspec)
 
       ::Guard.add_guard('rspec')
     end
 
     it "accepts guard name as symbol" do
-      @guard_rspec_class.should_receive(:new).and_return(@guard_rspec)
+      expect(@guard_rspec_class).to receive(:new).and_return(@guard_rspec)
 
       ::Guard.add_guard(:rspec)
     end
 
     it "adds guard to the @guards array" do
-      @guard_rspec_class.should_receive(:new).and_return(@guard_rspec)
+      expect(@guard_rspec_class).to receive(:new).and_return(@guard_rspec)
 
       ::Guard.add_guard(:rspec)
 
-      ::Guard.guards.should eq [@guard_rspec]
+      expect(::Guard.guards).to eq [@guard_rspec]
     end
 
     context "with no watchers given" do
       it "gives an empty array of watchers" do
-        @guard_rspec_class.should_receive(:new).with([], { }).and_return(@guard_rspec)
+        expect(@guard_rspec_class).to receive(:new).with([], { }).and_return(@guard_rspec)
 
         ::Guard.add_guard(:rspec, [])
       end
@@ -710,7 +710,7 @@ describe Guard do
 
     context "with watchers given" do
       it "give the watchers array" do
-        @guard_rspec_class.should_receive(:new).with([:foo], { }).and_return(@guard_rspec)
+        expect(@guard_rspec_class).to receive(:new).with([:foo], { }).and_return(@guard_rspec)
 
         ::Guard.add_guard(:rspec, [:foo])
       end
@@ -718,7 +718,7 @@ describe Guard do
 
     context "with no options given" do
       it "gives an empty hash of options" do
-        @guard_rspec_class.should_receive(:new).with([], { }).and_return(@guard_rspec)
+        expect(@guard_rspec_class).to receive(:new).with([], { }).and_return(@guard_rspec)
 
         ::Guard.add_guard(:rspec, [], [], { })
       end
@@ -726,7 +726,7 @@ describe Guard do
 
     context "with options given" do
       it "give the options hash" do
-        @guard_rspec_class.should_receive(:new).with([], { :foo => true, :group => :backend }).and_return(@guard_rspec)
+        expect(@guard_rspec_class).to receive(:new).with([], { :foo => true, :group => :backend }).and_return(@guard_rspec)
 
         ::Guard.add_guard(:rspec, [], [], { :foo => true, :group => :backend })
       end
@@ -739,51 +739,51 @@ describe Guard do
     it "accepts group name as string" do
       ::Guard.add_group('backend')
 
-      ::Guard.groups[0].name.should == :default
-      ::Guard.groups[1].name.should == :backend
+      expect(::Guard.groups[0].name).to eq(:default)
+      expect(::Guard.groups[1].name).to eq(:backend)
     end
 
     it "accepts group name as symbol" do
       ::Guard.add_group(:backend)
 
-      ::Guard.groups[0].name.should == :default
-      ::Guard.groups[1].name.should == :backend
+      expect(::Guard.groups[0].name).to eq(:default)
+      expect(::Guard.groups[1].name).to eq(:backend)
     end
 
     it "accepts options" do
       ::Guard.add_group(:backend, { :halt_on_fail => true })
 
-      ::Guard.groups[0].options.should eq({ })
-      ::Guard.groups[1].options.should eq({ :halt_on_fail => true })
+      expect(::Guard.groups[0].options).to eq({ })
+      expect(::Guard.groups[1].options).to eq({ :halt_on_fail => true })
     end
   end
 
   describe '.within_preserved_state' do
     subject { ::Guard.setup }
-    before { subject.interactor = stub('interactor').as_null_object }
+    before { subject.interactor = double('interactor').as_null_object }
 
     it 'disallows running the block concurrently to avoid inconsistent states' do
-      subject.lock.should_receive(:synchronize)
+      expect(subject.lock).to receive(:synchronize)
       subject.within_preserved_state &Proc.new { }
     end
 
     it 'runs the passed block' do
       @called = false
       subject.within_preserved_state { @called = true }
-      @called.should be_true
+      expect(@called).to be_truthy
     end
 
     context 'with restart interactor enabled' do
       it 'stops the interactor before running the block and starts it again when done' do
-        subject.interactor.should_receive(:stop)
-        subject.interactor.should_receive(:start)
+        expect(subject.interactor).to receive(:stop)
+        expect(subject.interactor).to receive(:start)
         subject.within_preserved_state &Proc.new { }
       end
     end
 
     context 'without restart interactor enabled' do
       it 'stops the interactor before running the block' do
-        subject.interactor.should_receive(:stop)
+        expect(subject.interactor).to receive(:stop)
         subject.interactor.should__not_receive(:start)
         subject.within_preserved_state &Proc.new { }
       end
@@ -798,7 +798,7 @@ describe Guard do
     end
 
     it "reports an error if the class is not found" do
-      ::Guard::UI.should_receive(:error).twice
+      expect(::Guard::UI).to receive(:error).twice
       Guard.get_guard_class('notAGuardClass')
     end
 
@@ -806,21 +806,21 @@ describe Guard do
       after(:all) { Guard.instance_eval { remove_const(:Classname) } rescue nil }
 
       it "resolves the Guard class from string" do
-        Guard.should_receive(:require) { |classname|
-          classname.should eq 'guard/classname'
+        expect(Guard).to receive(:require) { |classname|
+          expect(classname).to eq 'guard/classname'
           class Guard::Classname;
           end
         }
-        Guard.get_guard_class('classname').should == Guard::Classname
+        expect(Guard.get_guard_class('classname')).to eq(Guard::Classname)
       end
 
       it "resolves the Guard class from symbol" do
-        Guard.should_receive(:require) { |classname|
-          classname.should eq 'guard/classname'
+        expect(Guard).to receive(:require) { |classname|
+          expect(classname).to eq 'guard/classname'
           class Guard::Classname;
           end
         }
-        Guard.get_guard_class(:classname).should == Guard::Classname
+        expect(Guard.get_guard_class(:classname)).to eq(Guard::Classname)
       end
     end
 
@@ -828,12 +828,12 @@ describe Guard do
       after(:all) { Guard.instance_eval { remove_const(:DashedClassName) } rescue nil }
 
       it "returns the Guard class" do
-        Guard.should_receive(:require) { |classname|
-          classname.should eq 'guard/dashed-class-name'
+        expect(Guard).to receive(:require) { |classname|
+          expect(classname).to eq 'guard/dashed-class-name'
           class Guard::DashedClassName;
           end
         }
-        Guard.get_guard_class('dashed-class-name').should == Guard::DashedClassName
+        expect(Guard.get_guard_class('dashed-class-name')).to eq(Guard::DashedClassName)
       end
     end
 
@@ -841,12 +841,12 @@ describe Guard do
       after(:all) { Guard.instance_eval { remove_const(:UnderscoreClassName) } rescue nil }
 
       it "returns the Guard class" do
-        Guard.should_receive(:require) { |classname|
-          classname.should eq 'guard/underscore_class_name'
+        expect(Guard).to receive(:require) { |classname|
+          expect(classname).to eq 'guard/underscore_class_name'
           class Guard::UnderscoreClassName;
           end
         }
-        Guard.get_guard_class('underscore_class_name').should == Guard::UnderscoreClassName
+        expect(Guard.get_guard_class('underscore_class_name')).to eq(Guard::UnderscoreClassName)
       end
     end
 
@@ -854,12 +854,12 @@ describe Guard do
       after(:all) { Guard.instance_eval { remove_const(:VSpec) } rescue nil }
 
       it "returns the Guard class" do
-        Guard.should_receive(:require) { |classname|
-          classname.should eq 'guard/vspec'
+        expect(Guard).to receive(:require) { |classname|
+          expect(classname).to eq 'guard/vspec'
           class Guard::VSpec;
           end
         }
-        Guard.get_guard_class('vspec').should == Guard::VSpec
+        expect(Guard.get_guard_class('vspec')).to eq(Guard::VSpec)
       end
     end
 
@@ -872,15 +872,15 @@ describe Guard do
           end
         end
 
-        Guard.should_not_receive(:require)
-        Guard.get_guard_class('inline').should == Guard::Inline
+        expect(Guard).not_to receive(:require)
+        expect(Guard.get_guard_class('inline')).to eq(Guard::Inline)
       end
     end
 
     context 'when set to fail gracefully' do
       it 'does not print error messages on fail' do
-        ::Guard::UI.should_not_receive(:error)
-        Guard.get_guard_class('notAGuardClass', true).should be_nil
+        expect(::Guard::UI).not_to receive(:error)
+        expect(Guard.get_guard_class('notAGuardClass', true)).to be_nil
       end
     end
   end
@@ -891,30 +891,30 @@ describe Guard do
   describe '.locate_guard' do
     context 'Rubygems < 1.8.0' do
       before do
-        Gem::Version.should_receive(:create).with(Gem::VERSION) { rubygems_version_1_7_2 }
-        Gem::Version.should_receive(:create).with('1.8.0') { rubygems_version_1_8_0 }
+        expect(Gem::Version).to receive(:create).with(Gem::VERSION) { rubygems_version_1_7_2 }
+        expect(Gem::Version).to receive(:create).with('1.8.0') { rubygems_version_1_8_0 }
       end
 
       it "returns the path of a Guard gem" do
-        gems_source_index = stub
-        gems_found = [stub(:full_gem_path => 'gems/guard-rspec')]
-        Gem.should_receive(:source_index) { gems_source_index }
-        gems_source_index.should_receive(:find_name).with('guard-rspec') { gems_found }
+        gems_source_index = double
+        gems_found = [double(:full_gem_path => 'gems/guard-rspec')]
+        expect(Gem).to receive(:source_index) { gems_source_index }
+        expect(gems_source_index).to receive(:find_name).with('guard-rspec') { gems_found }
 
-        Guard.locate_guard('rspec').should eq 'gems/guard-rspec'
+        expect(Guard.locate_guard('rspec')).to eq 'gems/guard-rspec'
       end
     end
 
     context 'Rubygems >= 1.8.0' do
       before do
-        Gem::Version.should_receive(:create).with(Gem::VERSION) { rubygems_version_1_8_0 }
-        Gem::Version.should_receive(:create).with('1.8.0') { rubygems_version_1_8_0 }
+        expect(Gem::Version).to receive(:create).with(Gem::VERSION) { rubygems_version_1_8_0 }
+        expect(Gem::Version).to receive(:create).with('1.8.0') { rubygems_version_1_8_0 }
       end
 
       it "returns the path of a Guard gem" do
-        Gem::Specification.should_receive(:find_by_name).with('guard-rspec') { stub(:full_gem_path => 'gems/guard-rspec') }
+        expect(Gem::Specification).to receive(:find_by_name).with('guard-rspec') { double(:full_gem_path => 'gems/guard-rspec') }
 
-        Guard.locate_guard('rspec').should eq 'gems/guard-rspec'
+        expect(Guard.locate_guard('rspec')).to eq 'gems/guard-rspec'
       end
     end
   end
@@ -922,41 +922,41 @@ describe Guard do
   describe '.guard_gem_names' do
     context 'Rubygems < 1.8.0' do
       before do
-        Gem::Version.should_receive(:create).with(Gem::VERSION) { rubygems_version_1_7_2 }
-        Gem::Version.should_receive(:create).with('1.8.0') { rubygems_version_1_8_0 }
-        gems_source_index = stub
-        Gem.should_receive(:source_index) { gems_source_index }
-        gems_source_index.should_receive(:find_name).with(/^guard-/) { [stub(:name => 'guard-rspec')] }
+        expect(Gem::Version).to receive(:create).with(Gem::VERSION) { rubygems_version_1_7_2 }
+        expect(Gem::Version).to receive(:create).with('1.8.0') { rubygems_version_1_8_0 }
+        gems_source_index = double
+        expect(Gem).to receive(:source_index) { gems_source_index }
+        expect(gems_source_index).to receive(:find_name).with(/^guard-/) { [double(:name => 'guard-rspec')] }
       end
 
       it 'returns the list of guard gems' do
-        Guard.guard_gem_names.should include('rspec')
+        expect(Guard.guard_gem_names).to include('rspec')
       end
     end
 
     context 'Rubygems >= 1.8.0' do
       before do
-        Gem::Version.should_receive(:create).with(Gem::VERSION) { rubygems_version_1_8_0 }
-        Gem::Version.should_receive(:create).with('1.8.0') { rubygems_version_1_8_0 }
+        expect(Gem::Version).to receive(:create).with(Gem::VERSION) { rubygems_version_1_8_0 }
+        expect(Gem::Version).to receive(:create).with('1.8.0') { rubygems_version_1_8_0 }
         gems = [
-          stub(:name => 'guard'),
-          stub(:name => 'guard-rspec'),
-          stub(:name => 'gem1', :full_gem_path => '/gem1'),
-          stub(:name => 'gem2', :full_gem_path => '/gem2'),
+          double(:name => 'guard'),
+          double(:name => 'guard-rspec'),
+          double(:name => 'gem1', :full_gem_path => '/gem1'),
+          double(:name => 'gem2', :full_gem_path => '/gem2'),
         ]
-        File.stub(:exists?).with('/gem1/lib/guard/gem1.rb') { false }
-        File.stub(:exists?).with('/gem2/lib/guard/gem2.rb') { true }
-        Gem::Specification.should_receive(:find_all) { gems }
+        allow(File).to receive(:exists?).with('/gem1/lib/guard/gem1.rb') { false }
+        allow(File).to receive(:exists?).with('/gem2/lib/guard/gem2.rb') { true }
+        expect(Gem::Specification).to receive(:find_all) { gems }
       end
 
       it "returns the list of guard gems" do
         gems = Guard.guard_gem_names
-        gems.should include('rspec')
+        expect(gems).to include('rspec')
       end
 
       it "returns the list of embedded guard gems" do
         gems = Guard.guard_gem_names
-        gems.should include('gem2')
+        expect(gems).to include('gem2')
       end
     end
   end
@@ -965,7 +965,7 @@ describe Guard do
     subject { ::Guard.setup }
 
     before do
-      Guard.unstub(:debug_command_execution)
+      allow(Guard).to receive(:debug_command_execution).and_call_original
       @original_system  = Kernel.method(:system)
       @original_command = Kernel.method(:"`")
     end
@@ -974,25 +974,25 @@ describe Guard do
       Kernel.send(:remove_method, :system, :'`')
       Kernel.send(:define_method, :system, @original_system.to_proc)
       Kernel.send(:define_method, :"`", @original_command.to_proc)
-      Guard.stub(:debug_command_execution)
+      allow(Guard).to receive(:debug_command_execution)
     end
 
     it "outputs Kernel.#system method parameters" do
-      ::Guard::UI.should_receive(:debug).with("Command execution: exit 0")
+      expect(::Guard::UI).to receive(:debug).with("Command execution: exit 0")
       ::Guard.setup(:debug => true)
-      system("exit", "0").should be_false
+      expect(system("exit", "0")).to be_falsey
     end
 
     it "outputs Kernel.#` method parameters" do
-      ::Guard::UI.should_receive(:debug).with("Command execution: echo test")
+      expect(::Guard::UI).to receive(:debug).with("Command execution: echo test")
       ::Guard.setup(:debug => true)
-      `echo test`.should == "test\n"
+      expect(`echo test`).to eq("test\n")
     end
 
     it "outputs %x{} method parameters" do
-      ::Guard::UI.should_receive(:debug).with("Command execution: echo test")
+      expect(::Guard::UI).to receive(:debug).with("Command execution: echo test")
       ::Guard.setup(:debug => true)
-      %x{echo test}.should == "test\n"
+      expect(%x{echo test}).to eq("test\n")
     end
 
   end
@@ -1004,7 +1004,7 @@ describe Guard do
       before { subject.options[:watch_all_modifications] = true }
 
       it 'displays a deprecation warning to the user' do
-        ::Guard::UI.should_receive(:deprecation)
+        expect(::Guard::UI).to receive(:deprecation)
         subject.deprecated_options_warning
       end
     end
@@ -1013,7 +1013,7 @@ describe Guard do
       before { subject.options[:no_vendor] = true }
 
       it 'displays a deprecation warning to the user' do
-        ::Guard::UI.should_receive(:deprecation)
+        expect(::Guard::UI).to receive(:deprecation)
         subject.deprecated_options_warning
       end
     end

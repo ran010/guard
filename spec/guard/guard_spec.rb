@@ -7,20 +7,20 @@ describe Guard::Guard do
     it 'assigns the defined watchers' do
       watchers = [ Guard::Watcher.new('*') ]
       guard = Guard::Guard.new(watchers)
-      guard.watchers.should == watchers
+      expect(guard.watchers).to eq(watchers)
     end
 
     it 'assigns the defined options' do
       options = { :a => 1, :b => 2 }
       guard = Guard::Guard.new([], options)
-      guard.options.should == options
+      expect(guard.options).to eq(options)
     end
 
     context 'with a group in the options' do
       it 'assigns the given group' do
         options = { :group => :test }
         guard = Guard::Guard.new([], options)
-        guard.group.should == :test
+        expect(guard.group).to eq(:test)
       end
     end
 
@@ -28,32 +28,32 @@ describe Guard::Guard do
       it 'assigns a default group' do
         options = { }
         guard = Guard::Guard.new([], options)
-        guard.group.should == :default
+        expect(guard.group).to eq(:default)
       end
     end
   end
 
   describe '#init' do
     context 'when the Guard is already in the Guardfile' do
-      before { ::Guard::Dsl.stub(:guardfile_include?).and_return true }
+      before { allow(::Guard::Dsl).to receive(:guardfile_include?).and_return true }
 
       it 'shows an info message' do
-        ::Guard::UI.should_receive(:info).with 'Guardfile already includes myguard guard'
+        expect(::Guard::UI).to receive(:info).with 'Guardfile already includes myguard guard'
         Guard::Guard.init('myguard')
       end
     end
 
     context 'when the Guard is not in the Guardfile' do
-      before { ::Guard::Dsl.stub(:guardfile_include?).and_return false }
+      before { allow(::Guard::Dsl).to receive(:guardfile_include?).and_return false }
 
       it 'appends the template to the Guardfile' do
-        File.should_receive(:read).with('Guardfile').and_return 'Guardfile content'
-        ::Guard.should_receive(:locate_guard).with('myguard').and_return '/Users/me/projects/guard-myguard'
-        File.should_receive(:read).with('/Users/me/projects/guard-myguard/lib/guard/myguard/templates/Guardfile').and_return('Template content')
+        expect(File).to receive(:read).with('Guardfile').and_return 'Guardfile content'
+        expect(::Guard).to receive(:locate_guard).with('myguard').and_return '/Users/me/projects/guard-myguard'
+        expect(File).to receive(:read).with('/Users/me/projects/guard-myguard/lib/guard/myguard/templates/Guardfile').and_return('Template content')
         io = StringIO.new
-        File.should_receive(:open).with('Guardfile', 'wb').and_yield io
+        expect(File).to receive(:open).with('Guardfile', 'wb').and_yield io
         Guard::Guard.init('myguard')
-        io.string.should == "Guardfile content\n\nTemplate content\n"
+        expect(io.string).to eq("Guardfile content\n\nTemplate content\n")
       end
     end
   end
@@ -63,7 +63,7 @@ describe Guard::Guard do
 
     it "output the short plugin name" do
       guard = Guard::Dummy.new
-      guard.to_s.should eq "Dummy"
+      expect(guard.to_s).to eq "Dummy"
     end
   end
 

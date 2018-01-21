@@ -14,7 +14,7 @@ Dir["#{File.expand_path('..', __FILE__)}/support/**/*.rb"].each { |f| require f 
 puts "Please do not update/create files while tests are running."
 
 RSpec.configure do |config|
-  config.color_enabled = true
+  config.color = true
   config.order = :random
   config.filter_run :focus => true
   config.treat_symbols_as_metadata_keys_with_true_values = true
@@ -24,14 +24,14 @@ RSpec.configure do |config|
     @fixture_path = Pathname.new(File.expand_path('../fixtures/', __FILE__))
 
     # Ensure debug command execution isn't used in the specs
-    Guard.stub(:debug_command_execution)
+    allow(Guard).to receive(:debug_command_execution)
 
     # Stub all UI methods, so no visible output appears for the UI class
-    ::Guard::UI.stub(:info)
-    ::Guard::UI.stub(:warning)
-    ::Guard::UI.stub(:error)
-    ::Guard::UI.stub(:debug)
-    ::Guard::UI.stub(:deprecation)
+    allow(::Guard::UI).to receive(:info)
+    allow(::Guard::UI).to receive(:warning)
+    allow(::Guard::UI).to receive(:error)
+    allow(::Guard::UI).to receive(:debug)
+    allow(::Guard::UI).to receive(:deprecation)
   end
 
   config.before(:all) do

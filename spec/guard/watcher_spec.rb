@@ -10,24 +10,24 @@ describe Guard::Watcher do
     context "with a pattern parameter" do
       context "that is a string" do
         it "keeps the string pattern unmodified" do
-          described_class.new('spec_helper.rb').pattern.should == 'spec_helper.rb'
+          expect(described_class.new('spec_helper.rb').pattern).to eq('spec_helper.rb')
         end
       end
 
       context "that is a regexp" do
         it "keeps the regex pattern unmodified" do
-          described_class.new(/spec_helper\.rb/).pattern.should == /spec_helper\.rb/
+          expect(described_class.new(/spec_helper\.rb/).pattern).to eq(/spec_helper\.rb/)
         end
       end
 
       context "that is a string looking like a regex (deprecated)" do
-        before(:each) { Guard::UI.should_receive(:info).any_number_of_times }
+        before(:each) { allow(Guard::UI).to receive(:info) }
 
         it "converts the string automatically to a regex" do
-          described_class.new('^spec_helper.rb').pattern.should eq(/^spec_helper.rb/)
-          described_class.new('spec_helper.rb$').pattern.should eq(/spec_helper.rb$/)
-          described_class.new('spec_helper\.rb').pattern.should eq(/spec_helper\.rb/)
-          described_class.new('.*_spec.rb').pattern.should eq(/.*_spec.rb/)
+          expect(described_class.new('^spec_helper.rb').pattern).to eq(/^spec_helper.rb/)
+          expect(described_class.new('spec_helper.rb$').pattern).to eq(/spec_helper.rb$/)
+          expect(described_class.new('spec_helper\.rb').pattern).to eq(/spec_helper\.rb/)
+          expect(described_class.new('.*_spec.rb').pattern).to eq(/.*_spec.rb/)
         end
       end
     end
@@ -35,12 +35,12 @@ describe Guard::Watcher do
 
   describe "#action" do
     it "sets the action to nothing by default" do
-      described_class.new(/spec_helper\.rb/).action.should be_nil
+      expect(described_class.new(/spec_helper\.rb/).action).to be_nil
     end
 
     it "sets the action to the supplied block" do
       action = lambda { |m| "spec/#{m[1]}_spec.rb" }
-      described_class.new(%r{^lib/(.*).rb}, action).action.should == action
+      expect(described_class.new(%r{^lib/(.*).rb}, action).action).to eq(action)
     end
   end
 
@@ -56,7 +56,7 @@ describe Guard::Watcher do
         before(:all) { @guard.watchers = [described_class.new(/.*_spec\.rb/)] }
 
         it "returns the paths that matches the regex" do
-          described_class.match_files(@guard, ['guard_rocks_spec.rb', 'guard_rocks.rb']).should == ['guard_rocks_spec.rb']
+          expect(described_class.match_files(@guard, ['guard_rocks_spec.rb', 'guard_rocks.rb'])).to eq(['guard_rocks_spec.rb'])
         end
       end
 
@@ -64,7 +64,7 @@ describe Guard::Watcher do
         before(:all) { @guard.watchers = [described_class.new('guard_rocks_spec.rb')] }
 
         it "returns the path that matches the string" do
-          described_class.match_files(@guard, ['guard_rocks_spec.rb', 'guard_rocks.rb']).should == ['guard_rocks_spec.rb']
+          expect(described_class.match_files(@guard, ['guard_rocks_spec.rb', 'guard_rocks.rb'])).to eq(['guard_rocks_spec.rb'])
         end
       end
     end
@@ -83,27 +83,27 @@ describe Guard::Watcher do
         end
 
         it "returns a single file specified within the action" do
-          described_class.match_files(@guard, ['spec_helper.rb']).should == ['spec']
+          expect(described_class.match_files(@guard, ['spec_helper.rb'])).to eq(['spec'])
         end
 
         it "returns multiple files specified within the action" do
-          described_class.match_files(@guard, ['hash.rb']).should == ['foo', 'bar']
+          expect(described_class.match_files(@guard, ['hash.rb'])).to eq(['foo', 'bar'])
         end
 
         it "returns multiple files by combining the results of different actions" do
-          described_class.match_files(@guard, ['spec_helper.rb', 'array.rb']).should == ['spec', 'foo', 'bar']
+          expect(described_class.match_files(@guard, ['spec_helper.rb', 'array.rb'])).to eq(['spec', 'foo', 'bar'])
         end
 
         it "returns nothing if the action returns something other than a string or an array of strings" do
-          described_class.match_files(@guard, ['addition.rb']).should == []
+          expect(described_class.match_files(@guard, ['addition.rb'])).to eq([])
         end
 
         it "returns nothing if the action response is empty" do
-          described_class.match_files(@guard, ['blank.rb']).should == []
+          expect(described_class.match_files(@guard, ['blank.rb'])).to eq([])
         end
 
         it "returns nothing if the action returns nothing" do
-          described_class.match_files(@guard, ['uptime.rb']).should == []
+          expect(described_class.match_files(@guard, ['uptime.rb'])).to eq([])
         end
       end
 
@@ -120,29 +120,29 @@ describe Guard::Watcher do
         end
 
         it "returns a single file specified within the action" do
-          described_class.match_files(@guard_any_return, ['spec_helper.rb']).class.should be Array
-          described_class.match_files(@guard_any_return, ['spec_helper.rb']).empty?.should be_false
+          expect(described_class.match_files(@guard_any_return, ['spec_helper.rb']).class).to be Array
+          expect(described_class.match_files(@guard_any_return, ['spec_helper.rb']).empty?).to be_falsey
         end
 
         it "returns multiple files specified within the action" do
-          described_class.match_files(@guard_any_return, ['hash.rb']).should == [{:foo => 'bar'}]
+          expect(described_class.match_files(@guard_any_return, ['hash.rb'])).to eq([{:foo => 'bar'}])
         end
 
         it "returns multiple files by combining the results of different actions" do
-          described_class.match_files(@guard_any_return, ['spec_helper.rb', 'array.rb']).should == ['spec', ['foo', 'bar']]
+          expect(described_class.match_files(@guard_any_return, ['spec_helper.rb', 'array.rb'])).to eq(['spec', ['foo', 'bar']])
         end
 
         it "returns the evaluated addition argument in an array" do
-          described_class.match_files(@guard_any_return, ['addition.rb']).class.should be Array
-          described_class.match_files(@guard_any_return, ['addition.rb'])[0].should eq 2
+          expect(described_class.match_files(@guard_any_return, ['addition.rb']).class).to be Array
+          expect(described_class.match_files(@guard_any_return, ['addition.rb'])[0]).to eq 2
         end
 
         it "returns nothing if the action response is empty string" do
-          described_class.match_files(@guard_any_return, ['blank.rb']).should == ['']
+          expect(described_class.match_files(@guard_any_return, ['blank.rb'])).to eq([''])
         end
 
         it "returns nothing if the action returns empty string" do
-          described_class.match_files(@guard_any_return, ['uptime.rb']).should == ['']
+          expect(described_class.match_files(@guard_any_return, ['uptime.rb'])).to eq([''])
         end
       end
     end
@@ -161,27 +161,27 @@ describe Guard::Watcher do
          end
 
          it "returns a substituted single file specified within the action" do
-           described_class.match_files(@guard, ['lib/my_wonderful_lib.rb']).should == ['spec/my_wonderful_lib_spec.rb']
+           expect(described_class.match_files(@guard, ['lib/my_wonderful_lib.rb'])).to eq(['spec/my_wonderful_lib_spec.rb'])
          end
 
          it "returns multiple files specified within the action" do
-           described_class.match_files(@guard, ['hash.rb']).should == ['foo', 'bar']
+           expect(described_class.match_files(@guard, ['hash.rb'])).to eq(['foo', 'bar'])
          end
 
          it "returns multiple files by combining the results of different actions" do
-           described_class.match_files(@guard, ['lib/my_wonderful_lib.rb', 'array.rb']).should == ['spec/my_wonderful_lib_spec.rb', 'foo', 'bar']
+           expect(described_class.match_files(@guard, ['lib/my_wonderful_lib.rb', 'array.rb'])).to eq(['spec/my_wonderful_lib_spec.rb', 'foo', 'bar'])
          end
 
          it "returns nothing if the action returns something other than a string or an array of strings" do
-           described_class.match_files(@guard, ['addition.rb']).should == []
+           expect(described_class.match_files(@guard, ['addition.rb'])).to eq([])
          end
 
          it "returns nothing if the action response is empty" do
-           described_class.match_files(@guard, ['blank.rb']).should == []
+           expect(described_class.match_files(@guard, ['blank.rb'])).to eq([])
          end
 
          it "returns nothing if the action returns nothing" do
-           described_class.match_files(@guard, ['uptime.rb']).should == []
+           expect(described_class.match_files(@guard, ['uptime.rb'])).to eq([])
          end
       end
 
@@ -198,27 +198,27 @@ describe Guard::Watcher do
         end
 
         it "returns a substituted single file specified within the action" do
-          described_class.match_files(@guard_any_return, ['lib/my_wonderful_lib.rb']).should == ['spec/my_wonderful_lib_spec.rb']
+          expect(described_class.match_files(@guard_any_return, ['lib/my_wonderful_lib.rb'])).to eq(['spec/my_wonderful_lib_spec.rb'])
         end
 
         it "returns a hash specified within the action" do
-          described_class.match_files(@guard_any_return, ['hash.rb']).should == [{:foo => 'bar', :file_name => 'hash.rb'}]
+          expect(described_class.match_files(@guard_any_return, ['hash.rb'])).to eq([{:foo => 'bar', :file_name => 'hash.rb'}])
         end
 
         it "returns multiple files by combining the results of different actions" do
-          described_class.match_files(@guard_any_return, ['lib/my_wonderful_lib.rb', 'array.rb']).should == ['spec/my_wonderful_lib_spec.rb', ['foo', 'bar', "array.rb"]]
+          expect(described_class.match_files(@guard_any_return, ['lib/my_wonderful_lib.rb', 'array.rb'])).to eq(['spec/my_wonderful_lib_spec.rb', ['foo', 'bar', "array.rb"]])
         end
 
         it "returns the evaluated addition argument + the path" do
-          described_class.match_files(@guard_any_return, ['addition.rb']).should == ["2addition.rb"]
+          expect(described_class.match_files(@guard_any_return, ['addition.rb'])).to eq(["2addition.rb"])
         end
 
         it "returns nothing if the action response is empty string" do
-          described_class.match_files(@guard_any_return, ['blank.rb']).should == ['']
+          expect(described_class.match_files(@guard_any_return, ['blank.rb'])).to eq([''])
         end
 
         it "returns nothing if the action returns empty string" do
-          described_class.match_files(@guard_any_return, ['uptime.rb']).should == ['']
+          expect(described_class.match_files(@guard_any_return, ['uptime.rb'])).to eq([''])
         end
       end
     end
@@ -227,9 +227,9 @@ describe Guard::Watcher do
        before(:all) { @guard.watchers = [described_class.new('evil.rb', lambda { raise "EVIL" })] }
 
        it "displays the error and backtrace" do
-         Guard::UI.should_receive(:error) do |msg|
-           msg.should include("Problem with watch action!")
-           msg.should include("EVIL")
+         expect(Guard::UI).to receive(:error) do |msg|
+           expect(msg).to include("Problem with watch action!")
+           expect(msg).to include("EVIL")
          end
 
          described_class.match_files(@guard, ['evil.rb'])
@@ -245,11 +245,11 @@ describe Guard::Watcher do
     end
 
     context "with a watcher that matches a file" do
-      specify { described_class.match_files?(@guards, ['lib/my_wonderful_lib.rb', 'guard_rocks_spec.rb']).should be_true }
+      specify { expect(described_class.match_files?(@guards, ['lib/my_wonderful_lib.rb', 'guard_rocks_spec.rb'])).to be_truthy }
     end
 
     context "with no watcher that matches a file" do
-      specify { described_class.match_files?(@guards, ['lib/my_wonderful_lib.rb']).should be_false }
+      specify { expect(described_class.match_files?(@guards, ['lib/my_wonderful_lib.rb'])).to be_falsey }
     end
   end
 
@@ -259,17 +259,17 @@ describe Guard::Watcher do
         subject { described_class.new('guard_rocks_spec.rb') }
 
         context "with a watcher that matches a file" do
-          specify { subject.match('guard_rocks_spec.rb').should eq ['guard_rocks_spec.rb'] }
+          specify { expect(subject.match('guard_rocks_spec.rb')).to eq ['guard_rocks_spec.rb'] }
         end
 
         context "with a file containing a $" do
           subject { described_class.new('lib$/guard_rocks_spec.rb') }
 
-          specify { subject.match('lib$/guard_rocks_spec.rb').should eq ['lib$/guard_rocks_spec.rb'] }
+          specify { expect(subject.match('lib$/guard_rocks_spec.rb')).to eq ['lib$/guard_rocks_spec.rb'] }
         end
 
         context "with no watcher that matches a file" do
-          specify { subject.match('lib/my_wonderful_lib.rb').should be_nil }
+          specify { expect(subject.match('lib/my_wonderful_lib.rb')).to be_nil }
         end
       end
 
@@ -277,11 +277,11 @@ describe Guard::Watcher do
         subject { described_class.new('^guard_(rocks)_spec\.rb$') }
 
         context "with a watcher that matches a file" do
-          specify { subject.match('guard_rocks_spec.rb').should eq ['guard_rocks_spec.rb', 'rocks'] }
+          specify { expect(subject.match('guard_rocks_spec.rb')).to eq ['guard_rocks_spec.rb', 'rocks'] }
         end
 
         context "with no watcher that matches a file" do
-          specify { subject.match('lib/my_wonderful_lib.rb').should be_nil }
+          specify { expect(subject.match('lib/my_wonderful_lib.rb')).to be_nil }
         end
       end
     end
@@ -290,15 +290,15 @@ describe Guard::Watcher do
       subject { described_class.new(/(.*)_spec\.rb/) }
 
       context "with a watcher that matches a file" do
-        specify { subject.match('guard_rocks_spec.rb').should eq ['guard_rocks_spec.rb', 'guard_rocks'] }
+        specify { expect(subject.match('guard_rocks_spec.rb')).to eq ['guard_rocks_spec.rb', 'guard_rocks'] }
       end
 
       context "with a file containing a $" do
-        specify { subject.match('lib$/guard_rocks_spec.rb').should eq ['lib$/guard_rocks_spec.rb', 'lib$/guard_rocks'] }
+        specify { expect(subject.match('lib$/guard_rocks_spec.rb')).to eq ['lib$/guard_rocks_spec.rb', 'lib$/guard_rocks'] }
       end
 
       context "with no watcher that matches a file" do
-        specify { subject.match('lib/my_wonderful_lib.rb').should be_nil }
+        specify { expect(subject.match('lib/my_wonderful_lib.rb')).to be_nil }
       end
     end
 
@@ -307,11 +307,11 @@ describe Guard::Watcher do
         subject { described_class.new('guard_rocks_spec.rb') }
 
         context "with a watcher that matches a file" do
-          specify { subject.match('!guard_rocks_spec.rb').should eq ['!guard_rocks_spec.rb'] }
+          specify { expect(subject.match('!guard_rocks_spec.rb')).to eq ['!guard_rocks_spec.rb'] }
         end
 
         context "with no watcher that matches a file" do
-          specify { subject.match('!lib/my_wonderful_lib.rb').should be_nil }
+          specify { expect(subject.match('!lib/my_wonderful_lib.rb')).to be_nil }
         end
       end
 
@@ -319,25 +319,25 @@ describe Guard::Watcher do
         subject { described_class.new(/(.*)_spec\.rb/) }
 
         context "with a watcher that matches a file" do
-          specify { subject.match('!guard_rocks_spec.rb').should eq ['!guard_rocks_spec.rb', 'guard_rocks'] }
+          specify { expect(subject.match('!guard_rocks_spec.rb')).to eq ['!guard_rocks_spec.rb', 'guard_rocks'] }
         end
 
         context "with no watcher that matches a file" do
-          specify { subject.match('!lib/my_wonderful_lib.rb').should be_nil }
+          specify { expect(subject.match('!lib/my_wonderful_lib.rb')).to be_nil }
         end
       end
     end
   end
 
   describe ".match_guardfile?" do
-    before { Guard::Dsl.stub(:guardfile_path) { Dir.pwd + '/Guardfile' } }
+    before { allow(Guard::Dsl).to receive(:guardfile_path) { Dir.pwd + '/Guardfile' } }
 
     context "with files that match the Guardfile" do
-      specify { described_class.match_guardfile?(['Guardfile', 'guard_rocks_spec.rb']).should be_true }
+      specify { expect(described_class.match_guardfile?(['Guardfile', 'guard_rocks_spec.rb'])).to be_truthy }
     end
 
     context "with no files that match the Guardfile" do
-      specify { described_class.match_guardfile?(['guard_rocks.rb', 'guard_rocks_spec.rb']).should be_false }
+      specify { expect(described_class.match_guardfile?(['guard_rocks.rb', 'guard_rocks_spec.rb'])).to be_falsey }
     end
   end
 

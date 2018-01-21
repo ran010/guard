@@ -10,60 +10,60 @@ describe Guard::Notifier::GrowlNotify do
   end
 
   before do
-    subject.stub(:require)
+    allow(subject).to receive(:require)
     stub_const 'GrowlNotify', fake_growl_notify
   end
 
   describe '.available?' do
     context 'without the silent option' do
       it 'shows an error message when not available on the host OS' do
-        ::Guard::UI.should_receive(:error).with 'The :growl_notify notifier runs only on Mac OS X.'
-        RbConfig::CONFIG.should_receive(:[]).with('host_os').and_return 'mswin'
+        expect(::Guard::UI).to receive(:error).with 'The :growl_notify notifier runs only on Mac OS X.'
+        expect(RbConfig::CONFIG).to receive(:[]).with('host_os').and_return 'mswin'
         subject.available?
       end
 
       it 'shows an error message when the gem cannot be loaded' do
-        RbConfig::CONFIG.should_receive(:[]).with('host_os').and_return 'darwin'
-        ::Guard::UI.should_receive(:error).with "Please add \"gem 'growl_notify'\" to your Gemfile and run Guard with \"bundle exec\"."
-        subject.should_receive(:require).with('growl_notify').and_raise LoadError
+        expect(RbConfig::CONFIG).to receive(:[]).with('host_os').and_return 'darwin'
+        expect(::Guard::UI).to receive(:error).with "Please add \"gem 'growl_notify'\" to your Gemfile and run Guard with \"bundle exec\"."
+        expect(subject).to receive(:require).with('growl_notify').and_raise LoadError
         subject.available?
       end
     end
 
     context 'with the silent option' do
       it 'does not show an error message when not available on the host OS' do
-        ::Guard::UI.should_not_receive(:error).with 'The :growl_notify notifier runs only on Mac OS X.'
-        RbConfig::CONFIG.should_receive(:[]).with('host_os').and_return 'mswin'
+        expect(::Guard::UI).not_to receive(:error).with 'The :growl_notify notifier runs only on Mac OS X.'
+        expect(RbConfig::CONFIG).to receive(:[]).with('host_os').and_return 'mswin'
         subject.available?(true)
       end
 
       it 'does not show an error message when the gem cannot be loaded' do
-        RbConfig::CONFIG.should_receive(:[]).with('host_os').and_return 'darwin'
-        ::Guard::UI.should_not_receive(:error).with "Please add \"gem 'growl_notify'\" to your Gemfile and run Guard with \"bundle exec\"."
-        subject.should_receive(:require).with('growl_notify').and_raise LoadError
+        expect(RbConfig::CONFIG).to receive(:[]).with('host_os').and_return 'darwin'
+        expect(::Guard::UI).not_to receive(:error).with "Please add \"gem 'growl_notify'\" to your Gemfile and run Guard with \"bundle exec\"."
+        expect(subject).to receive(:require).with('growl_notify').and_raise LoadError
         subject.available?(true)
       end
     end
 
     context 'when the application name is not Guard' do
-      let(:config) { mock('config') }
+      let(:config) { double('config') }
 
       it 'does configure GrowlNotify' do
-        RbConfig::CONFIG.should_receive(:[]).with('host_os').and_return 'darwin'
-        ::GrowlNotify.should_receive(:application_name).and_return nil
-        ::GrowlNotify.should_receive(:config).and_yield config
-        config.should_receive(:notifications=).with ['success', 'pending', 'failed', 'notify']
-        config.should_receive(:default_notifications=).with 'notify'
-        config.should_receive(:application_name=).with 'Guard'
+        expect(RbConfig::CONFIG).to receive(:[]).with('host_os').and_return 'darwin'
+        expect(::GrowlNotify).to receive(:application_name).and_return nil
+        expect(::GrowlNotify).to receive(:config).and_yield config
+        expect(config).to receive(:notifications=).with ['success', 'pending', 'failed', 'notify']
+        expect(config).to receive(:default_notifications=).with 'notify'
+        expect(config).to receive(:application_name=).with 'Guard'
         subject.available?
       end
     end
 
     context 'when the application name is Guard' do
       it 'does not configure GrowlNotify again' do
-        RbConfig::CONFIG.should_receive(:[]).with('host_os').and_return 'darwin'
-        ::GrowlNotify.should_receive(:application_name).and_return 'Guard'
-        ::GrowlNotify.should_not_receive(:config)
+        expect(RbConfig::CONFIG).to receive(:[]).with('host_os').and_return 'darwin'
+        expect(::GrowlNotify).to receive(:application_name).and_return 'Guard'
+        expect(::GrowlNotify).not_to receive(:config)
         subject.available?
       end
     end
@@ -72,13 +72,13 @@ describe Guard::Notifier::GrowlNotify do
 
   describe '.nofify' do
     it 'requires the library again' do
-      subject.should_receive(:require).with('growl_notify').and_return true
+      expect(subject).to receive(:require).with('growl_notify').and_return true
       subject.notify('success', 'Welcome', 'Welcome to Guard', '/tmp/welcome.png', { })
     end
 
     context 'without additional options' do
       it 'shows the notification with the default options' do
-        ::GrowlNotify.should_receive(:send_notification).with({
+        expect(::GrowlNotify).to receive(:send_notification).with({
             :sticky           => false,
             :priority         => 0,
             :application_name => 'Guard',
@@ -93,7 +93,7 @@ describe Guard::Notifier::GrowlNotify do
 
     context 'with additional options' do
       it 'can override the default options' do
-        ::GrowlNotify.should_receive(:send_notification).with({
+        expect(::GrowlNotify).to receive(:send_notification).with({
             :sticky           => true,
             :priority         => -2,
             :application_name => 'Guard',
@@ -109,7 +109,7 @@ describe Guard::Notifier::GrowlNotify do
       end
 
       it 'cannot override the core options' do
-        ::GrowlNotify.should_receive(:send_notification).with({
+        expect(::GrowlNotify).to receive(:send_notification).with({
             :sticky           => false,
             :priority         => 0,
             :application_name => 'Guard',

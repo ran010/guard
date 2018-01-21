@@ -7,53 +7,53 @@ describe Guard::UI do
     # The spec helper stubs all UI classes, so other specs doesn't have
     # to explicit take care of it. We unstub and move the stubs one layer
     # down just for this spec.
-    Guard::UI.unstub(:info)
-    Guard::UI.unstub(:warning)
-    Guard::UI.unstub(:error)
-    Guard::UI.unstub(:deprecation)
-    Guard::UI.unstub(:debug)
+    allow(Guard::UI).to receive(:info).and_call_original
+    allow(Guard::UI).to receive(:warning).and_call_original
+    allow(Guard::UI).to receive(:error).and_call_original
+    allow(Guard::UI).to receive(:deprecation).and_call_original
+    allow(Guard::UI).to receive(:debug).and_call_original
 
-    Guard::UI.logger.stub(:info)
-    Guard::UI.logger.stub(:warn)
-    Guard::UI.logger.stub(:error)
-    Guard::UI.logger.stub(:deprecation)
-    Guard::UI.logger.stub(:debug)
+    allow(Guard::UI.logger).to receive(:info)
+    allow(Guard::UI.logger).to receive(:warn)
+    allow(Guard::UI.logger).to receive(:error)
+    allow(Guard::UI.logger).to receive(:deprecation)
+    allow(Guard::UI.logger).to receive(:debug)
   end
 
   after do
-    ::Guard::UI.stub(:info)
-    ::Guard::UI.stub(:warning)
-    ::Guard::UI.stub(:error)
-    ::Guard::UI.stub(:debug)
-    ::Guard::UI.stub(:deprecation)
+    allow(::Guard::UI).to receive(:info)
+    allow(::Guard::UI).to receive(:warning)
+    allow(::Guard::UI).to receive(:error)
+    allow(::Guard::UI).to receive(:debug)
+    allow(::Guard::UI).to receive(:deprecation)
   end
 
   describe '.logger' do
     it 'returns the logger instance' do
-      Guard::UI.logger.should be_an_instance_of Lumberjack::Logger
+      expect(Guard::UI.logger).to be_an_instance_of Lumberjack::Logger
     end
 
     it 'sets the logger device' do
-      Guard::UI.logger.device.send(:stream).should be $stderr
+      expect(Guard::UI.logger.device.send(:stream)).to be $stderr
     end
   end
 
   describe '.options=' do
     it 'sets the logger options' do
       Guard::UI.options = { :hi => :ho }
-      Guard::UI.options.should eql({ :hi => :ho })
+      expect(Guard::UI.options).to eql({ :hi => :ho })
     end
   end
 
   describe '.info' do
     it 'resets the line with the :reset option' do
-      Guard::UI.should_receive :reset_line
+      expect(Guard::UI).to receive :reset_line
       Guard::UI.info('Info message', { :reset => true })
     end
 
     it 'logs the message to with the info severity' do
-      pending 'See: https://github.com/rspec/rspec-mocks/issues/613'
-      Guard::UI.logger.should_receive(:info).with('Info message', 'Guard::UiSpec')
+      skip 'See: https://github.com/rspec/rspec-mocks/issues/613'
+      expect(Guard::UI.logger).to receive(:info).with('Info message', 'Guard::UiSpec')
       Guard::UI.info 'Info message'
     end
 
@@ -61,9 +61,9 @@ describe Guard::UI do
       before { Guard::UI.options[:only] = /A/ }
 
       it 'shows only the matching messages' do
-        Guard::UI.logger.should_receive(:info).with('Info message', 'A')
-        Guard::UI.logger.should_not_receive(:info).with('Info message', 'B')
-        Guard::UI.logger.should_not_receive(:info).with('Info message', 'C')
+        expect(Guard::UI.logger).to receive(:info).with('Info message', 'A')
+        expect(Guard::UI.logger).not_to receive(:info).with('Info message', 'B')
+        expect(Guard::UI.logger).not_to receive(:info).with('Info message', 'C')
 
         Guard::UI.info 'Info message', :plugin => 'A'
         Guard::UI.info 'Info message', :plugin => 'B'
@@ -75,9 +75,9 @@ describe Guard::UI do
       before { Guard::UI.options[:except] = /A/ }
 
       it 'shows only the matching messages' do
-        Guard::UI.logger.should_not_receive(:info).with('Info message', 'A')
-        Guard::UI.logger.should_receive(:info).with('Info message', 'B')
-        Guard::UI.logger.should_receive(:info).with('Info message', 'C')
+        expect(Guard::UI.logger).not_to receive(:info).with('Info message', 'A')
+        expect(Guard::UI.logger).to receive(:info).with('Info message', 'B')
+        expect(Guard::UI.logger).to receive(:info).with('Info message', 'C')
 
         Guard::UI.info 'Info message', :plugin => 'A'
         Guard::UI.info 'Info message', :plugin => 'B'
@@ -88,13 +88,13 @@ describe Guard::UI do
 
   describe '.warning' do
     it 'resets the line with the :reset option' do
-      Guard::UI.should_receive :reset_line
+      expect(Guard::UI).to receive :reset_line
       Guard::UI.warning('Warn message', { :reset => true })
     end
 
     it 'logs the message to with the warn severity' do
-      pending 'See: https://github.com/rspec/rspec-mocks/issues/613'
-      Guard::UI.logger.should_receive(:warn).with("\e[0;33mWarn message\e[0m", 'Guard::UiSpec')
+      skip 'See: https://github.com/rspec/rspec-mocks/issues/613'
+      expect(Guard::UI.logger).to receive(:warn).with("\e[0;33mWarn message\e[0m", 'Guard::UiSpec')
       Guard::UI.warning 'Warn message'
     end
 
@@ -102,9 +102,9 @@ describe Guard::UI do
       before { Guard::UI.options[:only] = /A/ }
 
       it 'shows only the matching messages' do
-        Guard::UI.logger.should_receive(:warn).with("\e[0;33mWarn message\e[0m", 'A')
-        Guard::UI.logger.should_not_receive(:warn).with("\e[0;33mWarn message\e[0m", 'B')
-        Guard::UI.logger.should_not_receive(:warn).with("\e[0;33mWarn message\e[0m", 'C')
+        expect(Guard::UI.logger).to receive(:warn).with("\e[0;33mWarn message\e[0m", 'A')
+        expect(Guard::UI.logger).not_to receive(:warn).with("\e[0;33mWarn message\e[0m", 'B')
+        expect(Guard::UI.logger).not_to receive(:warn).with("\e[0;33mWarn message\e[0m", 'C')
 
         Guard::UI.warning 'Warn message', :plugin => 'A'
         Guard::UI.warning 'Warn message', :plugin => 'B'
@@ -116,9 +116,9 @@ describe Guard::UI do
       before { Guard::UI.options[:except] = /A/ }
 
       it 'shows only the matching messages' do
-        Guard::UI.logger.should_not_receive(:warn).with("\e[0;33mWarn message\e[0m", 'A')
-        Guard::UI.logger.should_receive(:warn).with("\e[0;33mWarn message\e[0m", 'B')
-        Guard::UI.logger.should_receive(:warn).with("\e[0;33mWarn message\e[0m", 'C')
+        expect(Guard::UI.logger).not_to receive(:warn).with("\e[0;33mWarn message\e[0m", 'A')
+        expect(Guard::UI.logger).to receive(:warn).with("\e[0;33mWarn message\e[0m", 'B')
+        expect(Guard::UI.logger).to receive(:warn).with("\e[0;33mWarn message\e[0m", 'C')
 
         Guard::UI.warning 'Warn message', :plugin => 'A'
         Guard::UI.warning 'Warn message', :plugin => 'B'
@@ -129,13 +129,13 @@ describe Guard::UI do
 
   describe '.error' do
     it 'resets the line with the :reset option' do
-      Guard::UI.should_receive :reset_line
+      expect(Guard::UI).to receive :reset_line
       Guard::UI.error('Error message', { :reset => true })
     end
 
     it 'logs the message to with the error severity' do
-      pending 'See: https://github.com/rspec/rspec-mocks/issues/613'
-      Guard::UI.logger.should_receive(:error).with("\e[0;31mError message\e[0m", 'Guard::UiSpec')
+      skip 'See: https://github.com/rspec/rspec-mocks/issues/613'
+      expect(Guard::UI.logger).to receive(:error).with("\e[0;31mError message\e[0m", 'Guard::UiSpec')
       Guard::UI.error 'Error message'
     end
 
@@ -143,9 +143,9 @@ describe Guard::UI do
       before { Guard::UI.options[:only] = /A/ }
 
       it 'shows only the matching messages' do
-        Guard::UI.logger.should_receive(:error).with("\e[0;31mError message\e[0m", 'A')
-        Guard::UI.logger.should_not_receive(:error).with("\e[0;31mError message\e[0m", 'B')
-        Guard::UI.logger.should_not_receive(:error).with("\e[0;31mError message\e[0m", 'C')
+        expect(Guard::UI.logger).to receive(:error).with("\e[0;31mError message\e[0m", 'A')
+        expect(Guard::UI.logger).not_to receive(:error).with("\e[0;31mError message\e[0m", 'B')
+        expect(Guard::UI.logger).not_to receive(:error).with("\e[0;31mError message\e[0m", 'C')
 
         Guard::UI.error 'Error message', :plugin => 'A'
         Guard::UI.error 'Error message', :plugin => 'B'
@@ -157,9 +157,9 @@ describe Guard::UI do
       before { Guard::UI.options[:except] = /A/ }
 
       it 'shows only the matching messages' do
-        Guard::UI.logger.should_not_receive(:error).with("\e[0;31mError message\e[0m", 'A')
-        Guard::UI.logger.should_receive(:error).with("\e[0;31mError message\e[0m", 'B')
-        Guard::UI.logger.should_receive(:error).with("\e[0;31mError message\e[0m", 'C')
+        expect(Guard::UI.logger).not_to receive(:error).with("\e[0;31mError message\e[0m", 'A')
+        expect(Guard::UI.logger).to receive(:error).with("\e[0;31mError message\e[0m", 'B')
+        expect(Guard::UI.logger).to receive(:error).with("\e[0;31mError message\e[0m", 'C')
 
         Guard::UI.error 'Error message', :plugin => 'A'
         Guard::UI.error 'Error message', :plugin => 'B'
@@ -170,13 +170,13 @@ describe Guard::UI do
 
   describe '.deprecation' do
     it 'resets the line with the :reset option' do
-      Guard::UI.should_receive :reset_line
+      expect(Guard::UI).to receive :reset_line
       Guard::UI.deprecation('Deprecation message', { :reset => true })
     end
 
     it 'logs the message to with the warn severity' do
-      pending 'See: https://github.com/rspec/rspec-mocks/issues/613'
-      Guard::UI.logger.should_receive(:warn).with("\e[0;33mDeprecation message\e[0m", 'Guard::UiSpec')
+      skip 'See: https://github.com/rspec/rspec-mocks/issues/613'
+      expect(Guard::UI.logger).to receive(:warn).with("\e[0;33mDeprecation message\e[0m", 'Guard::UiSpec')
       Guard::UI.deprecation 'Deprecation message'
     end
 
@@ -184,9 +184,9 @@ describe Guard::UI do
       before { Guard::UI.options[:only] = /A/ }
 
       it 'shows only the matching messages' do
-        Guard::UI.logger.should_receive(:warn).with("\e[0;33mDeprecation message\e[0m", 'A')
-        Guard::UI.logger.should_not_receive(:warn).with("\e[0;33mDeprecation message\e[0m", 'B')
-        Guard::UI.logger.should_not_receive(:warn).with("\e[0;33mDeprecation message\e[0m", 'C')
+        expect(Guard::UI.logger).to receive(:warn).with("\e[0;33mDeprecation message\e[0m", 'A')
+        expect(Guard::UI.logger).not_to receive(:warn).with("\e[0;33mDeprecation message\e[0m", 'B')
+        expect(Guard::UI.logger).not_to receive(:warn).with("\e[0;33mDeprecation message\e[0m", 'C')
 
         Guard::UI.deprecation 'Deprecation message', :plugin => 'A'
         Guard::UI.deprecation 'Deprecation message', :plugin => 'B'
@@ -198,9 +198,9 @@ describe Guard::UI do
       before { Guard::UI.options[:except] = /A/ }
 
       it 'shows only the matching messages' do
-        Guard::UI.logger.should_not_receive(:warn).with("\e[0;33mDeprecation message\e[0m", 'A')
-        Guard::UI.logger.should_receive(:warn).with("\e[0;33mDeprecation message\e[0m", 'B')
-        Guard::UI.logger.should_receive(:warn).with("\e[0;33mDeprecation message\e[0m", 'C')
+        expect(Guard::UI.logger).not_to receive(:warn).with("\e[0;33mDeprecation message\e[0m", 'A')
+        expect(Guard::UI.logger).to receive(:warn).with("\e[0;33mDeprecation message\e[0m", 'B')
+        expect(Guard::UI.logger).to receive(:warn).with("\e[0;33mDeprecation message\e[0m", 'C')
 
         Guard::UI.deprecation 'Deprecation message', :plugin => 'A'
         Guard::UI.deprecation 'Deprecation message', :plugin => 'B'
@@ -211,13 +211,13 @@ describe Guard::UI do
 
   describe '.debug' do
     it 'resets the line with the :reset option' do
-      Guard::UI.should_receive :reset_line
+      expect(Guard::UI).to receive :reset_line
       Guard::UI.debug('Debug message', { :reset => true })
     end
 
     it 'logs the message to with the debug severity' do
-      pending 'See: https://github.com/rspec/rspec-mocks/issues/613'
-      Guard::UI.logger.should_receive(:debug).with("\e[0;33mDebug message\e[0m", 'Guard::UiSpec')
+      skip 'See: https://github.com/rspec/rspec-mocks/issues/613'
+      expect(Guard::UI.logger).to receive(:debug).with("\e[0;33mDebug message\e[0m", 'Guard::UiSpec')
       Guard::UI.debug 'Debug message'
     end
 
@@ -225,9 +225,9 @@ describe Guard::UI do
       before { Guard::UI.options[:only] = /A/ }
 
       it 'shows only the matching messages' do
-        Guard::UI.logger.should_receive(:debug).with("\e[0;33mDebug message\e[0m", 'A')
-        Guard::UI.logger.should_not_receive(:debug).with("\e[0;33mDebug message\e[0m", 'B')
-        Guard::UI.logger.should_not_receive(:debug).with("\e[0;33mDebug message\e[0m", 'C')
+        expect(Guard::UI.logger).to receive(:debug).with("\e[0;33mDebug message\e[0m", 'A')
+        expect(Guard::UI.logger).not_to receive(:debug).with("\e[0;33mDebug message\e[0m", 'B')
+        expect(Guard::UI.logger).not_to receive(:debug).with("\e[0;33mDebug message\e[0m", 'C')
 
         Guard::UI.debug 'Debug message', :plugin => 'A'
         Guard::UI.debug 'Debug message', :plugin => 'B'
@@ -239,9 +239,9 @@ describe Guard::UI do
       before { Guard::UI.options[:except] = /A/ }
 
       it 'shows only the matching messages' do
-        Guard::UI.logger.should_not_receive(:debug).with("\e[0;33mDebug message\e[0m", 'A')
-        Guard::UI.logger.should_receive(:debug).with("\e[0;33mDebug message\e[0m", 'B')
-        Guard::UI.logger.should_receive(:debug).with("\e[0;33mDebug message\e[0m", 'C')
+        expect(Guard::UI.logger).not_to receive(:debug).with("\e[0;33mDebug message\e[0m", 'A')
+        expect(Guard::UI.logger).to receive(:debug).with("\e[0;33mDebug message\e[0m", 'B')
+        expect(Guard::UI.logger).to receive(:debug).with("\e[0;33mDebug message\e[0m", 'C')
 
         Guard::UI.debug 'Debug message', :plugin => 'A'
         Guard::UI.debug 'Debug message', :plugin => 'B'
@@ -252,34 +252,34 @@ describe Guard::UI do
 
   describe '.clear' do
     context 'when the Guard clear option is enabled' do
-      before { ::Guard.stub(:options) { { :clear => true } } }
+      before { allow(::Guard).to receive(:options) { { :clear => true } } }
 
       it 'clears the outputs if clearable' do
         Guard::UI.clearable
-        Guard::UI.should_receive(:system).with('clear;')
+        expect(Guard::UI).to receive(:system).with('clear;')
         Guard::UI.clear
       end
 
       it 'doesn not clear the output if already cleared' do
-        Guard::UI.stub(:system)
+        allow(Guard::UI).to receive(:system)
         Guard::UI.clear
-        Guard::UI.should_not_receive(:system).with('clear;')
+        expect(Guard::UI).not_to receive(:system).with('clear;')
         Guard::UI.clear
       end
 
       it 'clears the outputs if forced' do
-        Guard::UI.stub(:system)
+        allow(Guard::UI).to receive(:system)
         Guard::UI.clear
-        Guard::UI.should_receive(:system).with('clear;')
+        expect(Guard::UI).to receive(:system).with('clear;')
         Guard::UI.clear(:force => true)
       end
     end
 
     context 'when the Guard clear option is disabled' do
-      before { ::Guard.stub(:options) { { :clear => false } } }
+      before { allow(::Guard).to receive(:options) { { :clear => false } } }
 
       it 'does not clear the output' do
-        Guard::UI.should_not_receive(:system).with('clear;')
+        expect(Guard::UI).not_to receive(:system).with('clear;')
         Guard::UI.clear
       end
     end
@@ -288,14 +288,14 @@ describe Guard::UI do
   describe '.action_with_scopes' do
     context 'with a plugins scope' do
       it 'shows the plugin scoped action' do
-        Guard::UI.should_receive(:info).with('Reload rspec,jasmine')
+        expect(Guard::UI).to receive(:info).with('Reload rspec,jasmine')
         Guard::UI.action_with_scopes('Reload', { :plugins => [:rspec, :jasmine] })
       end
     end
 
     context 'with a groups scope' do
       it 'shows the group scoped action' do
-        Guard::UI.should_receive(:info).with('Reload frontend')
+        expect(Guard::UI).to receive(:info).with('Reload frontend')
         Guard::UI.action_with_scopes('Reload', { :groups => [:frontend] })
       end
     end
@@ -304,7 +304,7 @@ describe Guard::UI do
       context 'with a global plugin scope' do
         it 'shows the global plugin scoped action' do
           Guard.scope = { :groups => [:test] }
-          Guard::UI.should_receive(:info).with('Reload test')
+          expect(Guard::UI).to receive(:info).with('Reload test')
           Guard::UI.action_with_scopes('Reload', {})
         end
       end
@@ -312,7 +312,7 @@ describe Guard::UI do
       context 'with a global group scope' do
         it 'shows the global group scoped action' do
           Guard.scope = { :groups => [:backend] }
-          Guard::UI.should_receive(:info).with('Reload backend')
+          expect(Guard::UI).to receive(:info).with('Reload backend')
           Guard::UI.action_with_scopes('Reload', {})
         end
       end

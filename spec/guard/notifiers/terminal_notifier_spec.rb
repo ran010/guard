@@ -9,15 +9,15 @@ describe Guard::Notifier::TerminalNotifier do
   end
 
   before do
-    subject.stub(:require)
+    allow(subject).to receive(:require)
     stub_const 'TerminalNotifier::Guard', fake_terminal_notifier
   end
 
   describe '.available?' do
     context 'without the silent option' do
       it 'shows an error message when not available on the host OS' do
-        ::Guard::UI.should_receive(:error).with 'The :terminal_notifier only runs on Mac OS X 10.8 and later.'
-        ::TerminalNotifier::Guard.stub(:available?).and_return(false)
+        expect(::Guard::UI).to receive(:error).with 'The :terminal_notifier only runs on Mac OS X 10.8 and later.'
+        allow(::TerminalNotifier::Guard).to receive(:available?).and_return(false)
         subject.available?
       end
     end
@@ -25,7 +25,7 @@ describe Guard::Notifier::TerminalNotifier do
 
   describe '.notify' do
     it 'should call the notifier.' do
-      ::TerminalNotifier::Guard.should_receive(:execute).with(
+      expect(::TerminalNotifier::Guard).to receive(:execute).with(
         false,
         { :title => 'any title', :type => :success, :message => 'any message' }
       )
@@ -33,7 +33,7 @@ describe Guard::Notifier::TerminalNotifier do
     end
 
     it "should allow the title to be customized" do
-      ::TerminalNotifier::Guard.should_receive(:execute).with(
+      expect(::TerminalNotifier::Guard).to receive(:execute).with(
         false,
         { :title => 'any title', :message => 'any message', :type => :error }
       )
@@ -43,7 +43,7 @@ describe Guard::Notifier::TerminalNotifier do
 
     context 'without a title set' do
       it 'should show the app name in the title' do
-        ::TerminalNotifier::Guard.should_receive(:execute).with(
+        expect(::TerminalNotifier::Guard).to receive(:execute).with(
           false,
           { :title => 'FooBar Success', :type => :success, :message => 'any message' }
         )
